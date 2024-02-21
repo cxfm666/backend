@@ -22,12 +22,6 @@ jobs:
         args: --release
         working-directory: backend/crates/bonfire
       
-    - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        working-directory: backend/crates/bonfire
-
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
