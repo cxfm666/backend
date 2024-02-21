@@ -1,59 +1,62 @@
+// 引入标准库中的HashSet
 use std::collections::HashSet;
 
+// 引入revolt_quark库中的各种模块和类型
 use revolt_quark::{
     models::{
+        // 服务器相关的模型，例如分类、服务器的部分信息、系统消息通道等
         server::{Category, FieldsServer, PartialServer, SystemMessageChannels},
-        File, Server, User,
+        File, Server, User, // 文件、服务器、用户模型
     },
-    perms, Db, Error, Permission, Ref, Result,
+    perms, Db, Error, Permission, Ref, Result, // 权限、数据库、错误、权限、引用、结果类型
 };
 
-use rocket::serde::json::Json;
-use serde::{Deserialize, Serialize};
-use validator::Validate;
+use rocket::serde::json::Json; // 引入Rocket框架的JSON支持
+use serde::{Deserialize, Serialize}; // 引入Serde的序列化与反序列化支持
+use validator::Validate; // 引入validator库支持数据验证
 
-/// # Server Data
+/// # 服务器数据
 #[derive(Validate, Serialize, Deserialize, JsonSchema)]
 pub struct DataEditServer {
-    /// Server name
+    /// 服务器名称
     #[validate(length(min = 1, max = 32))]
     name: Option<String>,
-    /// Server description
+    /// 服务器描述
     #[validate(length(min = 0, max = 1024))]
     description: Option<String>,
 
-    /// Attachment Id for icon
+    /// 用于图标的附件ID
     icon: Option<String>,
-    /// Attachment Id for banner
+    /// 用于横幅的附件ID
     banner: Option<String>,
 
-    /// Category structure for server
+    /// 服务器的分类结构
     #[validate]
     categories: Option<Vec<Category>>,
-    /// System message configuration
+    /// 系统消息配置
     system_messages: Option<SystemMessageChannels>,
 
-    /// Bitfield of server flags
+    /// 服务器标志的位字段
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<i32>,
 
-    // Whether this server is age-restricted
+    // 是否这个服务器是限制年龄的
     // nsfw: Option<bool>,
-    /// Whether this server is public and should show up on [Revolt Discover](https://rvlt.gg)
+    /// 是否这个服务器是公开的，并且应该出现在[Revolt Discover](https://rvlt.gg)上
     discoverable: Option<bool>,
-    /// Whether analytics should be collected for this server
+    /// 是否应该为这个服务器收集分析数据
     ///
-    /// Must be enabled in order to show up on [Revolt Discover](https://rvlt.gg).
+    /// 必须启用以便在[Revolt Discover](https://rvlt.gg)上显示。
     analytics: Option<bool>,
 
-    /// Fields to remove from server object
+    /// 从服务器对象中移除的字段
     #[validate(length(min = 1))]
     remove: Option<Vec<FieldsServer>>,
 }
 
-/// # Edit Server
+/// # 编辑服务器
 ///
-/// Edit a server by its id.
+/// 通过其ID编辑服务器。
 #[openapi(tag = "Server Information")]
 #[patch("/<target>", data = "<data>")]
 pub async fn req(
@@ -63,14 +66,16 @@ pub async fn req(
     data: Json<DataEditServer>,
 ) -> Result<Json<Server>> {
     let data = data.into_inner();
+    // 验证数据
     data.validate()
         .map_err(|error| Error::FailedValidation { error })?;
 
     let mut server = target.as_server(db).await?;
     let mut permissions = perms(&user).server(&server);
+    // 计算权限
     permissions.calc(db).await?;
 
-    // Check permissions
+    // 检查权限
     if data.name.is_none()
         && data.description.is_none()
         && data.icon.is_none()
@@ -92,19 +97,20 @@ pub async fn req(
         || data.analytics.is_some()
         || data.remove.is_some()
     {
+        // 检查是否有管理服务器的权限
         permissions
             .throw_permission(db, Permission::ManageServer)
             .await?;
     }
 
-    // Check we are privileged if changing sensitive fields
+    // 如果更改敏感字段，检查我们是否有权限
     if (data.flags.is_some() /*|| data.nsfw.is_some()*/ || data.discoverable.is_some())
         && !user.privileged
     {
         return Err(Error::NotPrivileged);
     }
 
-    // Changing categories requires manage channel
+    // 更改分类需要管理频道的权限
     if data.categories.is_some() {
         permissions
             .throw_permission(db, Permission::ManageChannel)
@@ -137,7 +143,7 @@ pub async fn req(
         ..Default::default()
     };
 
-    // 1. Remove fields from object
+    // 1. 从对象中移除字段
     if let Some(fields) = &remove {
         if fields.contains(&FieldsServer::Banner) {
             if let Some(banner) = &server.banner {
@@ -152,7 +158,7 @@ pub async fn req(
         }
     }
 
-    // 2. Validate changes
+    // 2. 验证更改
     if let Some(system_messages) = &partial.system_messages {
         for id in system_messages.clone().into_channel_ids() {
             if !server.channels.contains(&id) {
@@ -178,18 +184,19 @@ pub async fn req(
         }
     }
 
-    // 3. Apply new icon
+    // 3. 应用新图标
     if let Some(icon) = icon {
         partial.icon = Some(File::use_server_icon(db, &icon, &server.id).await?);
         server.icon = partial.icon.clone();
     }
 
-    // 4. Apply new banner
+    // 4. 应用新横幅
     if let Some(banner) = banner {
         partial.banner = Some(File::use_banner(db, &banner, &server.id).await?);
         server.banner = partial.banner.clone();
     }
 
+    // 应用更改到服务器
     server
         .update(db, partial, remove.unwrap_or_default())
         .await?;

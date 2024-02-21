@@ -25,19 +25,19 @@ pub fn config() -> Config {
                 expiry: Default::default(),
                 templates: Templates {
                     verify: Template {
-                        title: "Verify your Revolt account.".into(),
+                        title: "验证您在 梦乡 注册的账号".into(),
                         text: include_str!(crate::asset!("templates/verify.txt")).into(),
                         url: format!("{}/login/verify/", *APP_URL),
                         html: Some(include_str!(crate::asset!("templates/verify.html")).into()),
                     },
                     reset: Template {
-                        title: "Reset your Revolt password.".into(),
+                        title: "重置您在 梦乡 的账户密码".into(),
                         text: include_str!(crate::asset!("templates/reset.txt")).into(),
                         url: format!("{}/login/reset/", *APP_URL),
                         html: Some(include_str!(crate::asset!("templates/reset.html")).into()),
                     },
                     deletion: Template {
-                        title: "Confirm account deletion.".into(),
+                        title: "确认您在 梦乡 的账户删除请求".into(),
                         text: include_str!(crate::asset!("templates/deletion.txt")).into(),
                         url: format!("{}/delete/", *APP_URL),
                         html: Some(include_str!(crate::asset!("templates/deletion.html")).into()),
