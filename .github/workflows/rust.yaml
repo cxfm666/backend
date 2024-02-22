@@ -27,4 +27,4 @@ jobs:
       with:
         name: revolt-bonfire-build-artifacts
         path: |
-          target/release/revolt-bonfire
+          target/release/
