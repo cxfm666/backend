@@ -20,11 +20,10 @@ jobs:
       with:
         command: build
         args: --release
-        working-directory: backend/crates/bonfire
-      
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
         name: revolt-bonfire-build-artifacts
         path: |
-          target/release/
+          target/release/revolt-delta
