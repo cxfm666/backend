@@ -39,16 +39,16 @@ hcaptcha_key = ""
 hcaptcha_sitekey = ""
 
 [api.workers]
-max_concurrent_connections = 50
+max_concurrent_connections = 100
 
 [features]
 
 [features.limits]
 
 [features.limits.default]
-group_size = 100
+group_size = 1000
 bots = 5
-message_length = 2000
+message_length = 4000
 message_embeds = 5
 message_replies = 5
 message_attachments = 5
@@ -63,4 +63,4 @@ avatar_size = 4000000
 background_size = 6000000
 icon_size = 2500000
 banner_size = 6000000
-emoji_size = 500000
+emoji_size = 3000000

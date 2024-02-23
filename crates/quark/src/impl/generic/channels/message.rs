@@ -182,7 +182,7 @@ impl Message {
             }
         }
 
-        if running_total <= 2000 {
+        if running_total <= 4000 {
             Ok(())
         } else {
             Err(Error::PayloadTooLarge)
