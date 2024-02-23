@@ -1,15 +1,19 @@
+// 尝试从原始值转换的数字枚举
 use num_enum::TryFromPrimitive;
+// 序列化和反序列化支持
 use serde::{Deserialize, Serialize};
+// 验证支持
 use validator::Validate;
 
+// 引入文件附件模型
 use crate::models::attachment::File;
 
-/// Utility function to check if a boolean value is false
+/// 检查布尔值是否为假的实用函数
 pub fn if_false(t: &bool) -> bool {
     !t
 }
 
-/// User's relationship with another user (or themselves)
+/// 用户与另一个用户（或他们自己）的关系状态
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq, Eq)]
 pub enum RelationshipStatus {
     None,
@@ -21,7 +25,7 @@ pub enum RelationshipStatus {
     BlockedOther,
 }
 
-/// Relationship entry indicating current status with other user
+/// 表示与其他用户当前状态的关系条目
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone)]
 pub struct Relationship {
     #[serde(rename = "_id")]
@@ -29,147 +33,149 @@ pub struct Relationship {
     pub status: RelationshipStatus,
 }
 
-/// Presence status
+/// 在线状态
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, PartialEq, Eq)]
 pub enum Presence {
-    /// User is online
+    /// 用户在线
     Online,
-    /// User is not currently available
+    /// 用户当前不可用
     Idle,
-    /// User is focusing / will only receive mentions
+    /// 用户正在专注/只会收到提及
     Focus,
-    /// User is busy / will not receive any notifications
+    /// 用户忙碌/不会收到任何通知
     Busy,
-    /// User appears to be offline
+    /// 用户看起来离线
     Invisible,
 }
 
-/// User's active status
+/// 用户的活跃状态
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, Validate, Default)]
 pub struct UserStatus {
-    /// Custom status text
+    /// 自定义状态文本
     #[validate(length(min = 1, max = 128))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
-    /// Current presence option
+    /// 当前在线状态选项
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presence: Option<Presence>,
 }
 
-/// User's profile
+/// 用户的个人资料
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, Default)]
 pub struct UserProfile {
-    /// Text content on user's profile
+    /// 用户资料上的文本内容
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
-    /// Background visible on user's profile
+    /// 用户资料上可见的背景
     #[serde(skip_serializing_if = "Option::is_none")]
     pub background: Option<File>,
 }
 
-/// User badge bitfield
+/// 用户徽章位
 #[derive(Debug, PartialEq, Eq, TryFromPrimitive, Copy, Clone)]
 #[repr(i32)]
 pub enum Badges {
-    /// Revolt Developer
+    /// Revolt 开发者
     Developer = 1,
-    /// Helped translate Revolt
+    /// 帮助翻译 Revolt
     Translator = 2,
-    /// Monetarily supported Revolt
+    /// 财务支持 Revolt
     Supporter = 4,
-    /// Responsibly disclosed a security issue
+    /// 梦乡皇帝
+    Adelaide = 6,
+    /// 负责任地披露了一个安全问题
     ResponsibleDisclosure = 8,
-    /// Revolt Founder
+    /// Revolt 创始人
     Founder = 16,
-    /// Platform moderator
+    /// 平台管理员
     PlatformModeration = 32,
-    /// Active monetary supporter
+    /// 活跃的财务支持者
     ActiveSupporter = 64,
     /// 🦊🦝
     Paw = 128,
-    /// Joined as one of the first 1000 users in 2021
+    /// 作为2021年前1000名用户之一加入
     EarlyAdopter = 256,
     /// Amogus
     ReservedRelevantJokeBadge1 = 512,
-    /// Low resolution troll face
+    /// 低分辨率的恶搞脸
     ReservedRelevantJokeBadge2 = 1024,
 }
 
-/// User flag enum
+/// 用户标志枚举
 #[derive(Debug, PartialEq, Eq, TryFromPrimitive, Copy, Clone)]
 #[repr(i32)]
 pub enum Flags {
-    /// User has been suspended from the platform
+    /// 用户已从平台中暂停
     Suspended = 1,
-    /// User has deleted their account
+    /// 用户已删除他们的账户
     Deleted = 2,
-    /// User was banned off the platform
+    /// 用户已被平台禁止
     Banned = 4,
-    /// User was marked as spam and removed from platform
+    /// 用户被标记为垃圾邮件并从平台中移除
     Spam = 8,
 }
 
-/// Bot information for if the user is a bot
+/// 如果用户是机器人的机器人信息
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone)]
 pub struct BotInformation {
-    /// Id of the owner of this bot
+    /// 该机器人所有者的 Id
     pub owner: String,
 }
 
-/// Representiation of a User on Revolt.
+/// Revolt 上的用户表示。
 #[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, OptionalStruct, Default)]
 #[optional_derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[optional_name = "PartialUser"]
 #[opt_skip_serializing_none]
 #[opt_some_priority]
 pub struct User {
-    /// Unique Id
+    /// 唯一 Id
     #[serde(rename = "_id")]
     pub id: String,
-    /// Username
+    /// 用户名
     pub username: String,
-    /// Discriminator
+    /// 分隔符
     pub discriminator: String,
-    /// Display name
+    /// 显示名称
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
+    /// 头像附件
     #[serde(skip_serializing_if = "Option::is_none")]
-    /// Avatar attachment
     pub avatar: Option<File>,
-    /// Relationships with other users
+    /// 与其他用户的关系
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relations: Option<Vec<Relationship>>,
 
-    /// Bitfield of user badges
+    /// 用户徽章的位域
     #[serde(skip_serializing_if = "Option::is_none")]
     pub badges: Option<i32>,
-    /// User's current status
+    /// 用户当前状态
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<UserStatus>,
-    /// User's profile page
+    /// 用户的个人资料页面
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<UserProfile>,
 
-    /// Enum of user flags
+    /// 用户标志枚举
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<i32>,
-    /// Whether this user is privileged
+    /// 此用户是否享有特权
     #[serde(skip_serializing_if = "if_false", default)]
     pub privileged: bool,
-    /// Bot information
+    /// 机器人信息
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bot: Option<BotInformation>,
 
-    // ? Entries below should never be pushed to the database
-    /// Current session user's relationship with this user
+    // ? 下面的条目永远不应推送到数据库
+    /// 当前会话用户与此用户的关系
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relationship: Option<RelationshipStatus>,
-    /// Whether this user is currently online
+    /// 此用户当前是否在线
     #[serde(skip_serializing_if = "Option::is_none")]
     pub online: Option<bool>,
 }
 
-/// Optional fields on user object
+/// 用户对象上的可选字段
 #[derive(Serialize, Deserialize, JsonSchema, Debug, PartialEq, Eq, Clone)]
 pub enum FieldsUser {
     Avatar,
@@ -180,12 +186,12 @@ pub enum FieldsUser {
     DisplayName,
 }
 
-/// Enumeration providing a hint to the type of user we are handling
+/// 提供关于我们正在处理的用户类型提示的枚举
 pub enum UserHint {
-    /// Could be either a user or a bot
+    /// 可能是用户或机器人
     Any,
-    /// Only match bots
+    /// 仅匹配机器人
     Bot,
-    /// Only match users
+    /// 仅匹配用户
     User,
 }
