@@ -1,6 +1,6 @@
 [database]
 mongodb = "mongodb://127.0.0.1:29134"
-redis = "redis://127.0.0.1:29135"
+redis = "redis://127.0.0.1:29135/"
 
 [hosts]
 app = "http://local.revolt.chat"
